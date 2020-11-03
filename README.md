@@ -1,3 +1,6 @@
+[![Check Required Files](https://github.com/statprog-s1-2020/hw03_tut01_team08/workflows/Check%20Required%20Files/badge.svg)](https://github.com/statprog-s1-2020/hw03_tut01_team08/actions?query=workflow:%22Check%20Required%20Files%22) [![Check Scripts Run](https://github.com/statprog-s1-2020/hw03_tut01_team08/workflows/Check%20Scripts%20Run/badge.svg)](https://github.com/statprog-s1-2020/hw03_tut01_team08/actions?query=workflow:%22Check%20Scripts%20Run%22)
+
+
 Statistical Programming - Homework 3
 ---------
 Due on Friday November 13th by 17:00 UK local time.
