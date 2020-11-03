@@ -4,7 +4,10 @@
 Statistical Programming - Homework 3
 ---------
 Due on Friday November 13th by 17:00 UK local time.
-
+* Christos Konstantinou - s2122345@ed.ac.uk
+* Callum Abbott - s1705386@ed.ac.uk
+* Zhang Yuying - s2025068@ed.ac.uk
+* Guanxing Huang - s2117217@ed.ac.uk
 
 
 ## Writing a Newton optimizer
