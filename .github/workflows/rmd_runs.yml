@@ -1,0 +1,16 @@
+on: push
+name: Check Scripts Run
+jobs:
+  check:
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/statprog-s1-2020/hw1-docker:latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Check newton.R
+      run: |
+        Rscript newton.R
+    - name: Check rosenbrock.R
+      run: |
+        Rscript rosenbrock.R

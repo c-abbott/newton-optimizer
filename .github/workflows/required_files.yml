@@ -1,0 +1,18 @@
+on: push
+name: Check Required Files
+jobs:
+  check:
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/statprog-s1-2020/hw1-docker:latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Check Files
+      run: |
+        checklist::quit_on_failure({
+          checklist::check_required_files(
+            c("newton.R", "rosenbrock.R")
+          )
+        })
+      shell: Rscript {0}
