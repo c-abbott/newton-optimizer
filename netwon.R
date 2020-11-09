@@ -126,18 +126,16 @@ grb0.1 <- function(theta,k) {
 
 
 newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
-  # Start by assuming that the function passed by the user holds a gradient
-  # and hessian attribute
+  # Getting gradient, hessian and inverse hessian
+  gradient <- attr(f, 'gradient')
+  H <- attr(f, 'hessian')
+  Hi <- solve(H)
+
+  # Evaluating objective function at initial guess
+  f0 <- f(theta, ...)
+
   iter = 0
   while (iter < maxit) {
-    # Getting gradient, hessian and inverse hessian
-    gradient <- attr(f, 'gradient')
-    H <- attr(f, 'hessian')
-    Hi <- solve(H)
-
-    # Evaluating objective function at initial guess
-    f0 <- f(theta, ...)
-
     # Convergence check
     if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
       cat("converged")
