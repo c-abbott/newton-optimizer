@@ -126,6 +126,9 @@ grb0.1 <- function(theta,k) {
 
 
 newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
+  # Start by assuming that the function passed by the user holds a gradient
+  # and hessian attribute
+
   # Getting gradient, hessian and inverse hessian
   gradient <- attr(f, 'gradient')
   H <- attr(f, 'hessian')
@@ -144,14 +147,16 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       # Checking hessian is positive definite
       is.pos.def = FALSE
       while (is.pos.def == FALSE) {
-        tryCatch(
-          expr <- {
-            H.chol = chol(H)
+        H < - tryCatch(
+          {
+            chol(H)
             is.pos.def = TRUE
+            return(H)
           },
-          error <- function(e) {
+          error <- function(cond) {
             # Perturbing Hessian to be positive definite
-            H <- H + diag(abs(max(H))*10*1e-9, nrow=nrow(H), ncol=ncol(H))
+            H <- H + diag(abs(max(H))*1e-8*10^iter, nrow=nrow(H), ncol=ncol(H))
+            return(H)
           }
         )
       }
@@ -160,10 +165,34 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
         Delta <- Delta / 2
       }
       theta = theta + Delta
+      iter <- iter + 1
     }
   }
 }
 
+
+x = matrix(c(1,2,3,4,5,6,7,8,9), nrow=3, ncol=3)
+# Checking hessian is positive definite
+is.pos.def = FALSE
+iter = 1
+while (is.pos.def == FALSE) {
+  x <- tryCatch({
+
+    chol(x)
+
+    is.pos.def = TRUE
+    return(x)
+  },
+  error = function(cond){
+    x <- x + diag(abs(max(x))*1e-8*10^iter, nrow=nrow(x), ncol=ncol(x))
+    print(x)
+    iter = iter + 1
+    print(iter)
+
+    return(x)
+  })
+  iter = iter + 1
+}
 
 
 
