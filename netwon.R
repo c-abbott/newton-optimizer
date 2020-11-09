@@ -55,9 +55,8 @@ fx(2, 3, 4)
 
 newton <- function(theta, f, ..., tol = 1e-8, fscale = 1, maxit = 100, max.half = 20){
 
-  while (n<maxit) {
-    n <- n + 1
-    f0 <- rosenbrock(theta,k)
+  while (n < maxit) {
+    f0 <- rosenbrock(theta, k)
     g <- attr(wrapper(theta,k), "gradient")
     # create if not NULL statement
     Hs <- matrix(attr(wrapper(theta,k), "hessian"),nrow = length(theta), ncol = length(theta)) # rows and columns should be length or similar and dynamic
@@ -72,6 +71,7 @@ newton <- function(theta, f, ..., tol = 1e-8, fscale = 1, maxit = 100, max.half 
     th0 <- th1
     # also print iteration at this point
     print(th0)
+    n <- n + 1
   }
 
 
@@ -122,6 +122,48 @@ for (i in 1:length(th0)){
 grb0.1 <- function(theta,k) {
   z <- theta[1]; x <- theta[2]
   c(k * (2 * (z - x^2)), -(2 * (1 - x) + k * (2 * (2 * x * (z - x^2)))))
+}
+
+
+newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
+  # Start by assuming that the function passed by the user holds a gradient
+  # and hessian attribute
+  iter = 0
+  while (iter < maxit) {
+    # Getting gradient, hessian and inverse hessian
+    gradient <- attr(f, 'gradient')
+    H <- attr(f, 'hessian')
+    Hi <- solve(H)
+
+    # Evaluating objective function at initial guess
+    f0 <- f(theta, ...)
+
+    # Convergence check
+    if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
+      cat("converged")
+      return(list(f0, theta, iter, gradient, Hi))
+    } else {
+      # Checking hessian is positive definite
+      is.pos.def = FALSE
+      while (is.pos.def == FALSE) {
+        tryCatch(
+          expr <- {
+            H.chol = chol(H)
+            is.pos.def = TRUE
+          },
+          error <- function(e) {
+            # Perturbing Hessian to be positive definite
+            H <- H + diag(abs(max(H))*10*1e-9, nrow=nrow(H), ncol=ncol(H))
+          }
+        )
+      }
+      Delta <- backsolve(H.chol, forwardsolve(t(H.chol), -gradient))
+      while (f(theta + Delta, ...) < f0) {
+        Delta <- Delta / 2
+      }
+      theta = theta + Delta
+    }
+  }
 }
 
 
