@@ -4,16 +4,17 @@ rosenbrock <- function(theta, k){
   z <- theta[1]; x <- theta[2]
   f <- k * (z - x^2)^2 + (1 - x)^2
   ## create attributes for the f function and store the values for the gradient and the hessian matrix
+  # this makes use of the wrapper which i don't think its needed....
 
   # attr(f, 'gradient') <- c(attr(Deriv.wrapper(theta,k), "gradient"))
   # attr(f, 'hessian') <- matrix(attr(Deriv.wrapper(theta,k), "hessian"),nrow = length(theta), ncol = length(theta))
 
-  ## we can also use the following but i don't know which is more correct:
+  ## we can also use the following but i don't know without the wrapper:
 
   attr(f, 'gradient') <- c(attr(grb(z,x,k), "gradient"))
   attr(f, 'hessian') <- matrix(attr(grb(z,x,k), "hessian"),nrow = length(theta), ncol = length(theta))
 
-  ## we can use the above because the wrapper function does the same that happens in line 4
+  ## we can use the above because the wrapper function does the same thing that happens in line 4
 
   ## activate for version where only gradient is returned and not the Hessian matrix
 
@@ -38,5 +39,3 @@ Deriv.wrapper <- function(theta, k) {
   z <- theta[1]; x <- theta[2]
   return(grb(z,x,k))
 }
-
-
