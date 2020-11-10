@@ -4,6 +4,14 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   # Getting gradient, hessian and inverse hessian
   gradient <- attr(f0, 'gradient')
   H <- attr(f0, 'hessian')
+  # for the case that hessian matrix has not been supplied
+  if (is.null(H)) {
+    # create the Hessian matrix with finite differencing
+    H <- matrix(0L, nrow = length(theta), ncol = length(theta))
+    # more steps needed......
+    # make created Hessian matrix symmetric
+    H <- 0.5 * (t(H) + H)
+  }
   Hi <- solve(H)
 
   iter = 0
