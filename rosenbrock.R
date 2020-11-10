@@ -4,7 +4,7 @@ rosenbrock <- function(theta, k){
   z <- theta[1]; x <- theta[2]
   f <- k * (z - x^2)^2 + (1 - x)^2
   ## create attributes for the f function and store the values for the gradient and the hessian matrix
-   attr(f, 'gradient') <- c(attr(grb(z,x,k), "gradient"))
+  attr(f, 'gradient') <- c(attr(grb(z,x,k), "gradient"))
   attr(f, 'hessian') <- matrix(attr(grb(z,x,k), "hessian"),nrow = length(theta), ncol = length(theta))
 
   ## we can use the above because the wrapper function does the same thing that happens in line 4
