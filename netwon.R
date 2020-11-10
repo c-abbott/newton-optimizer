@@ -9,7 +9,6 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
     # create the Hessian matrix with finite differencing via a function to keep the code uncluttered
     # function is at the bottom of the script. Finite differencing using the gradient vector
     H <- fd.Hessian(theta, f,...)
-    # make created Hessian matrix symmetric
   }
   Hi <- solve(H)
 
@@ -50,16 +49,18 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
 }
 
 
-# in order for this to activate don't provide the Hessian matric from rosenbrock function.
+# in order for this to activate don't provide the Hessian matrix from rosenbrock function.
 fd.Hessian <- function(theta,f,k) {
   eps <- 1e-8
   gradient <- attr(f(theta,k), 'gradient')
+  # initialize matrix
   fd.f <- matrix(0L, nrow = length(theta), ncol = length(theta))
   for (i in 1:length(theta)){
     th1 <- theta; th1[i] <-th1[i]+eps
     f.hi <- attr(f(th1,k), 'gradient')
     fd.f[,i] <- (f.hi - gradient)/eps
   }
+  # make created Hessian matrix symmetric
   fd.f <- 0.5 * (t(fd.f) + fd.f)
   return(fd.f)
 }
