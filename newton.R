@@ -2,7 +2,7 @@
 # no hessian attribute attached)
 fd.Hessian <- function(theta,f,k) {
   eps <- 1e-8
-  gradient <- attr(f(theta,k), 'gradient')
+  gradient <- attr(f(theta, k), 'gradient')
   # Initialize Hessian matrix
   fd.f <- matrix(0L, nrow = length(theta), ncol = length(theta))
   for (i in 1:length(theta)){
@@ -10,46 +10,48 @@ fd.Hessian <- function(theta,f,k) {
     f.hi <- attr(f(th1,k), 'gradient')
     fd.f[,i] <- (f.hi - gradient)/eps
   }
-  # make created Hessian matrix symmetric
+  # Make created Hessian matrix symmetric
   fd.f <- 0.5 * (t(fd.f) + fd.f)
   return(fd.f)
 }
 
 newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
-  # Evaluating objective function at initial guess
+  # Evaluating objective function and attributes at initial theta
   f0 <- f(theta, ...)
-  # Getting gradient, hessian and inverse hessian
   gradient <- attr(f0, 'gradient')
   H <- attr(f0, 'hessian')
 
+  # Checking quantities needed for optimization are finite
   if (!is.finite(f0) || !is.finite(gradient) || !is.finite(H)) {
     stop("The objective or its derivatives are not finite at
          your initial estimate of theta.")
   }
 
-  # for the case that hessian matrix has not been supplied
+  # Hessian calculation by finite differencing if f has no hessian attribute
   if (is.null(H)) {
-    # create the Hessian matrix with finite differencing via a function to keep the code uncluttered
-    # function is at the bottom of the script. Finite differencing using the gradient vector
+    # Calling fd.Hessian defined above
     H <- fd.Hessian(theta, f,...)
   }
+  # Inverse Hessian calculation
   Hi <- solve(H)
 
+  # ------------------- Optimization Begins ------------------- #
   iter = 0
   while (iter < maxit) {
     # Convergence check
     if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
       cat("Converged")
+      # Checking hessian is positive definite at convergence
       tryCatch({
         chol(H)
       },
       error = function(cond){
         warning("The Hessian is not positive definite at convergence")
-      }
-      )
+      })
       return(list(f0, theta, iter, gradient, Hi))
     } else {
-      # Checking hessian is positive definite
+      # Checking hessian is positive definite by observing whether its
+      # Cholesky factor exists
       is.pos.def = FALSE
       while (is.pos.def == FALSE) {
         H <- tryCatch({
@@ -58,14 +60,16 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
           H
         },
         error = function(cond){
-          # Perturbing Hessian to be positive definite
+          # Perturbing Hessian to be positive definite if chol(H) does not exist
           H <- H + diag(abs(max(H))*1e-8*10^iter, nrow=nrow(H), ncol=ncol(H))
         })
       }
-      # Calculate forward step
+      # Calculate forward step towards optimum (minimum)
       H.chol <- chol(H)
       Delta <- backsolve(H.chol, forwardsolve(t(H.chol), -gradient))
-      # Ensure steps are taken in right direction towards optimum
+
+      # Ensuring steps are taken in right direction towards optimum (minimum)
+      # a.k.a preventing optimizer from blowing up
       half.iter = 0
       while (f(theta + Delta, ...) > f0) {
         if (half.iter < max.half) {
@@ -78,14 +82,17 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       }
       # Updating theta
       theta <- theta + Delta
-      # Updating function values
+
+      # Updating function values and attributes at new theta
       f0 <- f(theta, ...)
       gradient <- attr(f0, 'gradient')
       H <- attr(f0, 'hessian')
+
+      # Iteration update
       iter <- iter + 1
     }
   }
-  # iter == maxit final convergence check
+  # Checking whether convergence occurs when iter == maxit
   if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
     cat("Converged")
     return(list(f0, theta, iter, gradient, Hi))
