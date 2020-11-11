@@ -23,4 +23,3 @@ rosenbrock <- function(theta, k){
 # this is a function.
 grb <- deriv(expression(k * (z - x^2)^2 + (1 - x)^2),c("z", "x"), ## dif wrt these
              function(z,x,k){}, hessian = TRUE)
-
