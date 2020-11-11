@@ -28,9 +28,3 @@ rosenbrock2 <- function(theta, k){
 # Calls to newton optimizer
 output1 <- newton(c(50, 50), rosenbrock1, k=1)
 output2 <- newton(c(50, 50), rosenbrock2, k=1)
-
-# Tests
-# newton(c(1,1), rosenbrock1, k=1) # Testing whether iter attr is 0
-# newton(c(Inf, Inf), rosenbrock1, k=1)
-# newton(c(Inf, Inf), rosenbrock1, k=Inf)
-# newton(c(NA, NA), rosenbrock2, k=1)
