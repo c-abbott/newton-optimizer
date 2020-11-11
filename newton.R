@@ -21,16 +21,17 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   gradient <- attr(f0, 'gradient')
   H <- attr(f0, 'hessian')
 
+  # Hessian calculation by finite differencing if f has no hessian attribute
+  if (is.null(H)) {
+    # Calling fd.Hessian defined above
+    attr(f0, 'hessian') <- fd.Hessian(theta, f,...)
+    H <- attr(f0, 'hessian')
+  }
+
   # Checking quantities needed for optimization are finite
   if (!is.finite(f0) || !is.finite(gradient) || !is.finite(H)) {
     stop("The objective or its derivatives are not finite at
          your initial estimate of theta.")
-  }
-
-  # Hessian calculation by finite differencing if f has no hessian attribute
-  if (is.null(H)) {
-    # Calling fd.Hessian defined above
-    H <- fd.Hessian(theta, f,...)
   }
   # Inverse Hessian calculation
   Hi <- solve(H)
@@ -40,7 +41,7 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   while (iter < maxit) {
     # Convergence check
     if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
-      cat("Converged")
+      cat("Converged\n")
       # Checking hessian is positive definite at convergence
       tryCatch({
         chol(H)
@@ -61,7 +62,7 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
         },
         error = function(cond){
           # Perturbing Hessian to be positive definite if chol(H) does not exist
-          H <- H + diag(abs(max(H))*1e-8*10^iter, nrow=nrow(H), ncol=ncol(H))
+          H <- H + diag(abs(max(H))*1e-8*10*iter, nrow=nrow(H), ncol=ncol(H))
         })
       }
       # Calculate forward step towards optimum (minimum)
@@ -87,7 +88,12 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       f0 <- f(theta, ...)
       gradient <- attr(f0, 'gradient')
       H <- attr(f0, 'hessian')
-
+      # Hessian calculation by finite differencing if f has no hessian attribute
+      if (is.null(H)) {
+        # Calling fd.Hessian defined above
+        attr(f0, 'hessian') <- fd.Hessian(theta, f,...)
+        H <- attr(f0, 'hessian')
+      }
       # Iteration update
       iter <- iter + 1
     }
