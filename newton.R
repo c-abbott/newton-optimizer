@@ -1,6 +1,6 @@
 # Finite difference Hessian function (called when the f passed to newton() has
 # no hessian attribute attached)
-fd.Hessian <- function(theta,f,k) {
+fd.Hessian <- function(theta, f, k) {
   eps <- 1e-8
   gradient <- attr(f(theta, k), 'gradient')
   # Initialize Hessian matrix
@@ -24,8 +24,7 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   # Hessian calculation by finite differencing if f has no hessian attribute
   if (is.null(H)) {
     # Calling fd.Hessian defined above
-    attr(f0, 'hessian') <- fd.Hessian(theta, f,...)
-    H <- attr(f0, 'hessian')
+    H <- fd.Hessian(theta, f,...)
   }
 
   # Checking quantities needed for optimization are finite
@@ -33,8 +32,6 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
     stop("The objective or its derivatives are not finite at
          your initial estimate of theta.")
   }
-  # Inverse Hessian calculation
-  Hi <- solve(H)
 
   # ------------------- Optimization Begins ------------------- #
   iter = 0
@@ -49,21 +46,16 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       error = function(cond){
         warning("The Hessian is not positive definite at convergence")
       })
-      return(list(f0, theta, iter, gradient, Hi))
+      # Inverse Hessian calculation
+      Hi <- solve(H)
+      return(list(f.min=f0[1], theta=theta, iter=iter, g=gradient, Hi=Hi))
     } else {
-      # Checking hessian is positive definite by observing whether its
-      # Cholesky factor exists
-      is.pos.def = FALSE
-      while (is.pos.def == FALSE) {
-        H <- tryCatch({
-          chol(H)
-          is.pos.def = TRUE
-          H
-        },
-        error = function(cond){
-          # Perturbing Hessian to be positive definite if chol(H) does not exist
-          H <- H + diag(abs(max(H))*1e-8*10*iter, nrow=nrow(H), ncol=ncol(H))
-        })
+      catch.iter <- 0
+      # Positive definite hessian check
+      while(inherits(try(chol(H), silent = TRUE), "try-error") == TRUE) {
+        # Perturbing hessian to be positive definite (runs of if chol(H) fails)
+        H <- H + diag(abs(max(H))*10^catch.iter*1e-8, nrow=nrow(H), ncol=ncol(H))
+        catch.iter <- catch.iter + 1
       }
       # Calculate forward step towards optimum (minimum)
       H.chol <- chol(H)
@@ -77,7 +69,7 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
           Delta <- Delta / 2
           half.iter <- half.iter + 1
         } else {
-          warning(paste("The update step failed to reduce the objective
+          stop(paste("The update step failed to reduce the objective
                   after ", as.character(max.half), " halvings"))
         }
       }
@@ -87,13 +79,15 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       # Updating function values and attributes at new theta
       f0 <- f(theta, ...)
       gradient <- attr(f0, 'gradient')
-      H <- attr(f0, 'hessian')
+
       # Hessian calculation by finite differencing if f has no hessian attribute
-      if (is.null(H)) {
+      if (is.null(attr(f0, 'hessian'))) {
         # Calling fd.Hessian defined above
-        attr(f0, 'hessian') <- fd.Hessian(theta, f,...)
+        H <- fd.Hessian(theta, f,...)
+      } else {
         H <- attr(f0, 'hessian')
       }
+
       # Iteration update
       iter <- iter + 1
     }

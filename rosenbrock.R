@@ -4,7 +4,7 @@ source('newton.R')
 grb <- deriv(expression(k * (z - x^2)^2 + (1 - x)^2),c("z", "x"), ## dif wrt these
              function(z,x,k){}, hessian = TRUE)
 
-# Rosenbrock function where hessian attribute exist
+# Rosenbrock function where hessian attribute exists
 rosenbrock1 <- function(theta, k){
   # Split input vector to z and x for deriv() usage
   z <- theta[1]; x <- theta[2]
@@ -26,5 +26,5 @@ rosenbrock2 <- function(theta, k){
 }
 
 # Calls to newton optimizer
-output1 <- newton(c(50, 50), rosenbrock1, k=1)
-output2 <- newton(c(50, 50), rosenbrock2, k=1)
+output1 <- newton(c(-0.5, 2), rosenbrock1, k=1)
+output2 <- newton(c(-0.5, 2), rosenbrock2, k=1)
