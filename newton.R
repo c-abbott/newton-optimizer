@@ -1,8 +1,9 @@
-# in order for this to activate don't provide the Hessian matrix from rosenbrock function.
+# Finite difference Hessian function (called when the f passed to newton() has
+# no hessian attribute attached)
 fd.Hessian <- function(theta,f,k) {
   eps <- 1e-8
   gradient <- attr(f(theta,k), 'gradient')
-  # initialize matrix
+  # Initialize Hessian matrix
   fd.f <- matrix(0L, nrow = length(theta), ncol = length(theta))
   for (i in 1:length(theta)){
     th1 <- theta; th1[i] <- th1[i]+eps
@@ -21,6 +22,11 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   gradient <- attr(f0, 'gradient')
   H <- attr(f0, 'hessian')
 
+  if (!is.finite(f0) || !is.finite(gradient) || !is.finite(H)) {
+    stop("The objective or its derivatives are not finite at
+         your initial estimate of theta.")
+  }
+
   # for the case that hessian matrix has not been supplied
   if (is.null(H)) {
     # create the Hessian matrix with finite differencing via a function to keep the code uncluttered
@@ -34,6 +40,13 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
     # Convergence check
     if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
       cat("Converged")
+      tryCatch({
+        chol(H)
+      },
+      error = function(cond){
+        warning("The Hessian is not positive definite at convergence")
+      }
+      )
       return(list(f0, theta, iter, gradient, Hi))
     } else {
       # Checking hessian is positive definite
@@ -53,8 +66,15 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       H.chol <- chol(H)
       Delta <- backsolve(H.chol, forwardsolve(t(H.chol), -gradient))
       # Ensure steps are taken in right direction towards optimum
+      half.iter = 0
       while (f(theta + Delta, ...) > f0) {
-        Delta <- Delta / 2
+        if (half.iter < max.half) {
+          Delta <- Delta / 2
+          half.iter <- half.iter + 1
+        } else {
+          warning(paste("The update step failed to reduce the objective
+                  after ", as.character(max.half), " halvings"))
+        }
       }
       # Updating theta
       theta <- theta + Delta
@@ -64,5 +84,13 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       H <- attr(f0, 'hessian')
       iter <- iter + 1
     }
+  }
+  # iter == maxit final convergence check
+  if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
+    cat("Converged")
+    return(list(f0, theta, iter, gradient, Hi))
+  } else {
+    warning(paste("Newton optimizer failed to converage after
+                  maxit = ", as.character(maxit), " iterations"))
   }
 }
