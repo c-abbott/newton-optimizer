@@ -41,7 +41,7 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   while (iter < maxit) {
     # Convergence check
     if (max(abs(gradient)) < (abs(f0)+fscale)*tol){
-      cat("Converged\n")
+      cat("Converged \n")
       # Checking hessian is positive definite at convergence
       tryCatch({
         chol(H)
@@ -49,7 +49,9 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       error = function(cond){
         warning("The Hessian is not positive definite at convergence")
       })
-      return(list(f0, theta, iter, gradient, Hi))
+      return(print(list('function' = f0, 'Theta' = theta,
+                        'itterations' = iter,
+                        'Inverse Hessian' = Hi)))
     } else {
       # Checking hessian is positive definite by observing whether its
       # Cholesky factor exists
