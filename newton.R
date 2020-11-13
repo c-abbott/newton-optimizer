@@ -22,13 +22,13 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
   H <- attr(f0, 'hessian')
 
   # Hessian calculation by finite differencing if f has no hessian attribute
-  if (is.null(H)) {
+  if (any(is.null(H))) {
     # Calling fd.Hessian defined above
     H <- fd.Hessian(theta, f,...)
   }
 
   # Checking quantities needed for optimization are finite
-  if (!is.finite(f0) || !is.finite(gradient) || !is.finite(H)) {
+  if (!is.finite(f0) || any(!is.finite(gradient))|| any(!is.finite(H))) {
     stop("The objective or its derivatives are not finite at
          your initial estimate of theta.")
   }
@@ -51,20 +51,22 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       return(list(f.min=f0[1], theta=theta, iter=iter, g=gradient, Hi=Hi))
     } else {
       catch.iter <- 0
-      # Positive definite hessian check
-      while(inherits(try(chol(H), silent = TRUE), "try-error") == TRUE) {
+      # Cholesky factor calculation (perturb H until this calculation is possible)
+      while(inherits(try(H.chol <- chol(H), silent = TRUE), "try-error") == TRUE) {
         # Perturbing hessian to be positive definite (runs of if chol(H) fails)
         H <- H + diag(abs(max(H))*10^catch.iter*1e-8, nrow=nrow(H), ncol=ncol(H))
         catch.iter <- catch.iter + 1
       }
       # Calculate forward step towards optimum (minimum)
-      H.chol <- chol(H)
       Delta <- backsolve(H.chol, forwardsolve(t(H.chol), -gradient))
 
       # Ensuring steps are taken in right direction towards optimum (minimum)
       # a.k.a preventing optimizer from blowing up
       half.iter = 0
-      while (f(theta + Delta, ...) > f0) {
+      while ((f(theta + Delta, ...)[1] > f0[1]) |
+             !is.finite(f(theta + Delta, ...)) |
+             any(!is.finite(attr(f(theta + Delta, ...), "gradient"))) |
+             any(!is.finite(attr(f(theta + Delta, ...), "hessian")))) {
         if (half.iter < max.half) {
           Delta <- Delta / 2
           half.iter <- half.iter + 1
@@ -81,7 +83,7 @@ newton <- function(theta, f, ..., tol=1e-8, fscale=1, maxit=100, max.half=20) {
       gradient <- attr(f0, 'gradient')
 
       # Hessian calculation by finite differencing if f has no hessian attribute
-      if (is.null(attr(f0, 'hessian'))) {
+      if (any(is.null(attr(f0, 'hessian')))) {
         # Calling fd.Hessian defined above
         H <- fd.Hessian(theta, f,...)
       } else {

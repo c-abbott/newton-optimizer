@@ -26,5 +26,5 @@ rosenbrock2 <- function(theta, k){
 }
 
 # Calls to newton optimizer
-output1 <- newton(c(-0.5, 2), rosenbrock1, k=1)
+output1 <- newton(c(42, 3.14), rosenbrock1, k=1)
 output2 <- newton(c(-0.5, 2), rosenbrock2, k=1)
